@@ -49,6 +49,31 @@ function Update-GitRepository {
     Set-Location -Path "$StartDirectory"
 }
 
+<#
+    .SYNOPSIS
+    Updates multiple Git repositories.
+
+    .DESCRIPTION
+    Updates multiple Git repositories by accepting multiple directories. Each given directory can also be treated as containing multiple Git repositories, enabling updating a set of sub-directories at once.
+
+    .PARAMETER BaseDirectories
+    A set of directories that shall be used as Git repositories or base directories containing multiple Git repositories.
+
+    .PARAMETER Recursive
+    If set, the given BaseDirectories will be treated as containing multiple Git repositories in sub-directories.
+
+    .INPUTS
+    None.
+
+    .OUTPUTS
+    Logging to CLI.
+
+    .EXAMPLE
+    Update-GitRepositories ../../Git/my-repo,../../Git/my-other-repo
+
+    .EXAMPLE
+    Update-GitRepositories -BaseDirectories ../../Git -Recursive
+#>
 function Update-GitRepositories {
     Param (
         [Parameter(Mandatory = $true, Position = 0)]
