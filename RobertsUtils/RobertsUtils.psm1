@@ -37,6 +37,7 @@ function Update-GitRepository {
         if ($Remotes) {
             $Remotes.ToString() | ForEach-Object {
                 $RemoteName = ($_ | Select-String -Pattern '^(?<name>\w+)\s+').Matches[0].Groups['name'].Value
+                Write-Output "Info: Updating remot <$RemoteName>..."
                 & "$GitCommand" "fetch" "$RemoteName"
             }
         }
