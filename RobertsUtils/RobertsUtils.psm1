@@ -23,8 +23,8 @@ function Update-GitRepository {
         [String]$Directory
     )
 
-    $StartDirectory=$(Get-Location)
-    $GitCommand=$((Get-Command git).Source)
+    $StartDirectory = $(Get-Location)
+    $GitCommand = $((Get-Command git).Source)
 
     Write-Output "Info: Entering <$Directory>:"
     Set-Location -Path "$Directory"
@@ -37,7 +37,7 @@ function Update-GitRepository {
         if ($Remotes) {
             $Remotes.ToString() | ForEach-Object {
                 $RemoteName = ($_ | Select-String -Pattern '^(?<name>\w+)\s+').Matches[0].Groups['name'].Value
-                Write-Output "Info: Updating remot <$RemoteName>..."
+                Write-Output "Info: Updating remote <$RemoteName>..."
                 & "$GitCommand" "fetch" "$RemoteName"
             }
         }
