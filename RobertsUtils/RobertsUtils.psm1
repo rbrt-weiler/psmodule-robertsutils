@@ -1,9 +1,10 @@
 function Update-GitRepository {
     Param(
+        [Parameter(Mandatory = $true, Position = 0)]
         [String]$Directory
     )
 
-    $BaseDirectory=$(Get-Location)
+    $StartDirectory=$(Get-Location)
     $GitCommand=$((Get-Command git).Source)
 
     Write-Output "Info: Entering <$Directory>:"
@@ -25,7 +26,7 @@ function Update-GitRepository {
     }
     Write-Output ""
 
-    Set-Location -Path "$BaseDirectory"
+    Set-Location -Path "$StartDirectory"
 }
 
 Export-ModuleMember -Function Update-GitRepository
