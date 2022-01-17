@@ -4,7 +4,7 @@ A [PowerShell](https://github.com/PowerShell/PowerShell) module that contains va
 
 ## Installation
 
-Copy or link the directories contained in this repository somewhere in your `$env:PSModulePath`.
+For a permanent installation copy or link the directories contained in this repository somewhere in your `$env:PSModulePath`. You can also import the modules manually with `Import-Module <./FileName.psm1>` (and remove them with `Remove-Module <ModuleName>`).
 
 ## Functions
 
