@@ -49,4 +49,33 @@ function Update-GitRepository {
     Set-Location -Path "$StartDirectory"
 }
 
+function Update-GitRepositories {
+    Param (
+        [Parameter(Mandatory = $true, Position = 0)]
+        [string[]]$BaseDirectories,
+        [Parameter(Position = 1)]
+        [switch]$Recursive
+    )
+
+    $StartDirectory = $(Get-Location)
+
+    foreach ($Directory in $BaseDirectories) {
+        if (Test-Path -Path "$Directory") {
+            Set-Location -Path "$Directory"
+            if ($Recursive) {
+                Get-ChildItem -Directory | ForEach-Object { Update-GitRepository -Directory "$($_.FullName)" }
+            } else {
+                & Update-GitRepository -Directory "$Directory"
+            }
+        } else {
+            Write-Output "Warn: <$Directory> does not exist, skipping."
+            Write-Output ""
+            continue
+        }
+    }
+
+    Set-Location -Path "$StartDirectory"
+}
+
 Export-ModuleMember -Function Update-GitRepository
+Export-ModuleMember -Function Update-GitRepositories
