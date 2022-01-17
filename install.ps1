@@ -53,8 +53,11 @@ function Get-BaseInstallPath {
 #>
 function Publish-Module {
     Param (
+        [Parameter(Mandatory = $true)]
         [string]$InstallPath,
+        [Parameter(Mandatory = $true)]
         [string]$ModuleName,
+        [Parameter(Mandatory = $true)]
         [string]$ModulePath
     )
     $DestinationPath = Join-Path -Path "$InstallPath" -ChildPath "$ModuleName"
@@ -79,7 +82,9 @@ function Publish-Module {
 #>
 function Unpublish-Module {
     Param (
+        [Parameter(Mandatory = $true)]
         [string]$InstallPath,
+        [Parameter(Mandatory = $true)]
         [string]$ModuleName
     )
     $DestinationPath = Join-Path -Path "$InstallPath" -ChildPath "$ModuleName"
