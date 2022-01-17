@@ -1,3 +1,22 @@
+<#
+    .SYNOPSIS
+    Installs the modules contained in this repository.
+
+    .PARAMETER Replace
+    If set, existing versions of the modules in $env:PSModulePath[0] will be replaced.
+
+    .PARAMETER Uninstall
+    If set, existing versions of the modules in $env:PSModulePath[0] will be removed only.
+
+    .EXAMPLE
+    ./install.ps1
+
+    .EXAMPLE
+    ./install.ps1 -Replace
+
+    .EXAMPLE
+    ./install.ps1 -Uninstall
+#>
 Param (
     [Parameter()]
     [switch]$Replace,
@@ -5,6 +24,10 @@ Param (
     [switch]$Uninstall
 )
 
+<#
+    .SYNOPSIS
+    Returns $env:PSModulePath[0] on all supported platforms.
+#>
 function Get-BaseInstallPath {
     if ($IsWindows) {
         $ModulePaths = $env:PSModulePath -split ';'
@@ -15,11 +38,24 @@ function Get-BaseInstallPath {
     return $InstallPath
 }
 
+<#
+    .SYNOPSIS
+    Copies a module to a specified location.
+
+    .PARAMETER InstallPath
+    The base path where the module should be installed.
+
+    .PARAMETER ModuleName
+    The short name of the module to be installed.
+
+    .PARAMETER ModulePath
+    The full path of the module to be installed.
+#>
 function Publish-Module {
     Param (
         [string]$InstallPath,
-        [string]$ModulePath,
-        [string]$ModuleName
+        [string]$ModuleName,
+        [string]$ModulePath
     )
     $DestinationPath = Join-Path -Path "$InstallPath" -ChildPath "$ModuleName"
     if (Test-Path "$DestinationPath") {
@@ -31,6 +67,16 @@ function Publish-Module {
     return
 }
 
+<#
+    .SYNOPSIS
+    Removes a module from a specified location.
+
+    .PARAMETER InstallPath
+    The base path from which the module should be removed.
+
+    .PARAMETER ModuleName
+    The short name of the module to be removed.
+#>
 function Unpublish-Module {
     Param (
         [string]$InstallPath,
