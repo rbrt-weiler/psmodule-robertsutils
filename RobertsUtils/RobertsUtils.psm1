@@ -1,3 +1,22 @@
+<#
+    .SYNOPSIS
+    Updates a Git repository.
+
+    .DESCRIPTION
+    Updates a Git repository by entering the given directory and performing the necessary Git commands. The function will also update remotes, if any other than "origin" are configured.
+
+    .PARAMETER Directory
+    The directory that shall be treated as a Git repository.
+
+    .INPUTS
+    None.
+
+    .OUTPUTS
+    Logging to CLI.
+
+    .EXAMPLE
+    Update-GitRepository ../../Git/my-repo
+#>
 function Update-GitRepository {
     Param(
         [Parameter(Mandatory = $true, Position = 0)]
