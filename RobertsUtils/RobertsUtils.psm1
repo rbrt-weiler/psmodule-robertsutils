@@ -97,9 +97,8 @@ function Update-GitRepositories {
             Write-Output ""
             continue
         }
+        Set-Location -Path "$StartDirectory"
     }
-
-    Set-Location -Path "$StartDirectory"
 }
 
 Export-ModuleMember -Function Update-GitRepository
