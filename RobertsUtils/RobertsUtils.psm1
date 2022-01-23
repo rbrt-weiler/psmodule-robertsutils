@@ -17,6 +17,33 @@ class GitPathStatus {
     }
 }
 
+enum GitUpdateStatusCode {
+    Unknown = -1
+    Successful = 0
+    Failed = 1
+    NoRepository = 2
+    NonExistant = 3
+}
+
+class GitUpdateStatus {
+    [String]$Path
+    [GitUpdateStatusCode]$Status
+    [Int32]$GitExitCode
+    [String]$GitOutput
+    GitUpdateStatus() {
+        $this.Path = ""
+        $this.Status = [GitUpdateStatusCode]::Unknown
+        $this.GitExitCode = -1
+        $this.GitOutput = ""
+    }
+    GitUpdateStatus([String]$Path) {
+        $this.Path = $Path
+        $this.Status = [GitUpdateStatusCode]::Unknown
+        $this.GitExitCode = -1
+        $this.GitOutput = ""
+    }
+}
+
 <#
     .SYNOPSIS
     Tests if a given path is a Git repository and if it contains submodules.
@@ -93,89 +120,70 @@ function Test-GitPath {
     Update-GitRepository ../../Git/my-repo
 #>
 function Update-GitRepository {
-    Param(
-        [Parameter(Mandatory = $true, Position = 0)]
-        [String]$Directory
-    )
-
-    $StartDirectory = $(Get-Location)
-    $GitCommand = $((Get-Command git).Source)
-
-    Write-Output "Info: Entering <$Directory>:"
-    Set-Location -Path "$Directory"
-    if (Test-Path -Path ".git") {
-        & "$GitCommand" "pull" "origin"
-        if (Test-Path -Path ".gitmodules") {
-            & "$GitCommand" "submodule" "update" "--remote" "--merge"
-        }
-        $Remotes = & "$GitCommand" "remote" "-v" | Select-String -Pattern '(fetch)' | Select-String -NotMatch -Pattern '^origin'
-        if ($Remotes) {
-            $Remotes.ToString() | ForEach-Object {
-                $RemoteName = ($_ | Select-String -Pattern '^(?<name>\w+)\s+').Matches[0].Groups['name'].Value
-                Write-Output "Info: Updating remote <$RemoteName>..."
-                & "$GitCommand" "fetch" "$RemoteName"
-            }
-        }
-    } else {
-        Write-Output "Info: No <.git> found, skipping."
-    }
-    Write-Output ""
-
-    Set-Location -Path "$StartDirectory"
-}
-
-<#
-    .SYNOPSIS
-    Updates multiple Git repositories.
-
-    .DESCRIPTION
-    Updates multiple Git repositories by accepting multiple directories. Each given directory can also be treated as containing multiple Git repositories, enabling updating a set of sub-directories at once.
-
-    .PARAMETER BaseDirectories
-    A set of directories that shall be used as Git repositories or base directories containing multiple Git repositories.
-
-    .PARAMETER Recursive
-    If set, the given BaseDirectories will be treated as containing multiple Git repositories in sub-directories.
-
-    .INPUTS
-    None.
-
-    .OUTPUTS
-    Logging to CLI.
-
-    .EXAMPLE
-    Update-GitRepositories ../../Git/my-repo,../../Git/my-other-repo
-
-    .EXAMPLE
-    Update-GitRepositories -BaseDirectories ../../Git -Recursive
-#>
-function Update-GitRepositories {
     Param (
-        [Parameter(Mandatory = $true, Position = 0)]
-        [string[]]$BaseDirectories,
-        [Parameter(Position = 1)]
-        [switch]$Recursive
+        [Parameter(Position = 0, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
+        [String]$Name,
+        [Parameter(Position = 1, ValueFromPipelineByPropertyName = $true)]
+        [String]$FullName
     )
-
-    $StartDirectory = $(Get-Location)
-
-    foreach ($Directory in $BaseDirectories) {
-        if (Test-Path -Path "$Directory") {
-            Set-Location -Path "$Directory"
-            if ($Recursive) {
-                Get-ChildItem -Directory | ForEach-Object { Update-GitRepository -Directory "$($_.FullName)" }
+    begin {
+        $GitCommand = (Get-Command "git").Source
+        if (-Not $GitCommand) {
+            Write-Error "Could not find Git, exiting."
+            exit 1
+        }
+        $StartDirectory = Get-Location
+        $StatusCollection = @()
+    }
+    process {
+        $TestPath = ""
+        if ($FullName) {
+            $TestPath = $FullName
+        } else {
+            $TestPath = $Name
+        }
+        $Status = [GitUpdateStatus]::new("$TestPath")
+        $GitTest = Test-GitPath -Name "$TestPath"
+        if ($GitTest.IsRepository) {
+            Set-Location "$($GitTest.Path)"
+            $Status.GitOutput += Invoke-Expression -Command "$GitCommand pull *>&1"
+            $Status.GitExitCode = $LASTEXITCODE
+            if ($LASTEXITCODE -eq 0) {
+                $Status.Status = [GitUpdateStatusCode]::Successful
+                if ($GitTest.ContainsSubmodules) {
+                    $Status.GitOutput += Invoke-Expression -Command "$GitCommand submodule update --remote --merge *>&1"
+                    $Status.GitExitCode = $LASTEXITCODE
+                    if ($LASTEXITCODE -ne 0) {
+                        $Status.Status = [GitUpdateStatusCode]::Failed
+                    }
+                }
+                $Remotes = Invoke-Expression "$GitCommand remote -v" | Select-String -Pattern '(fetch)' | Select-String -NotMatch -Pattern '^origin'
+                if ($Remotes) {
+                    $Remotes.ToString() | ForEach-Object {
+                        $RemoteName = ($_ | Select-String -Pattern '^(?<name>\w+)\s+').Matches[0].Groups['name'].Value
+                        $Status.GitOutput += Invoke-Expression -Command "$GitCommand fetch $RemoteName *>&1"
+                        if ($LASTEXITCODE -ne 0) {
+                            $Status.Status = [GitUpdateStatusCode]::Failed
+                        }
+                    }
+                }
             } else {
-                & Update-GitRepository -Directory "$Directory"
+                $Status.Status = [GitUpdateStatusCode]::Failed
             }
         } else {
-            Write-Output "Warn: <$Directory> does not exist, skipping."
-            Write-Output ""
-            continue
+            if ($GitTest.PathExists) {
+                $Status.Status = [GitUpdateStatusCode]::NoRepository
+            } else {
+                $Status.Status = [GitUpdateStatusCode]::NonExistant
+            }
         }
-        Set-Location -Path "$StartDirectory"
+        $StatusCollection += $Status
+        Set-Location "$StartDirectory"
+    }
+    end {
+        return $StatusCollection
     }
 }
 
 Export-ModuleMember -Function Test-GitPath
 Export-ModuleMember -Function Update-GitRepository
-Export-ModuleMember -Function Update-GitRepositories
