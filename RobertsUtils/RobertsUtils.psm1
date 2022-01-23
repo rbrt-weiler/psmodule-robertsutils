@@ -9,6 +9,12 @@ class GitPathStatus {
         $this.IsRepository = $false
         $this.ContainsSubmodules = $false
     }
+    GitPathStatus([String]$Path) {
+        $this.Path = $Path
+        $this.PathExists = $false
+        $this.IsRepository = $false
+        $this.ContainsSubmodules = $false
+    }
 }
 
 <#
@@ -44,14 +50,13 @@ function Test-GitPath {
         $StatusCollection = @()
     }
     process {
-        $Status = [GitPathStatus]::new()
         $TestPath = ""
         if ($FullName) {
             $TestPath = $FullName
         } else {
             $TestPath = $Name
         }
-        $Status.Path = $TestPath
+        $Status = [GitPathStatus]::new("$TestPath")
         if (Test-Path -Path "$TestPath") {
             $Status.PathExists = $true
             if (Test-Path -Path (Join-Path -Path "$TestPath" -ChildPath ".git")) {
