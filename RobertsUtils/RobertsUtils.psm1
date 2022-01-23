@@ -58,13 +58,28 @@ class GitUpdateStatus {
     The path that shall be tested in absolute form; provided to work with Get-ChildItem.
 
     .INPUTS
-    System.String[]
+    System.String
 
     .OUTPUTS
     GitPathStatus[]
 
     .NOTES
     The check performed by this function is solely based on the fact if a subdirectory ".git" (or ".gitmodules" for the submodule check) exists in the path provided by either Name or FullName.
+
+    .EXAMPLE
+    Test-GitPath ../../Git/my-repo
+
+    Will check if the path '../../Git/my-repo' is a Git repository and return an object with associated information.
+
+    .EXAMPLE
+    Test-GitPath -Name ../../Git/my-repo
+
+    Will check if the path '../../Git/my-repo' is a Git repository and return an object with associated information.
+
+    .EXAMPLE
+    Get-ChildItem -Directory ../../Git | Test-GitPath
+
+    Tests all subdirectories contained in '../../Git' and return an array of objects with associated information.
 #>
 function Test-GitPath {
     Param (
@@ -105,19 +120,37 @@ function Test-GitPath {
     Updates a Git repository.
 
     .DESCRIPTION
-    Updates a Git repository by entering the given directory and performing the necessary Git commands. The function will also update remotes, if any other than "origin" are configured.
+    Updates a Git repository by entering the given directory and performing the necessary Git commands. The function will also fetch remotes, if any other than "origin" are configured.
 
-    .PARAMETER Directory
+    .PARAMETER Name
     The directory that shall be treated as a Git repository.
 
+    .PARAMETER FullName
+    The directory that shall be treated as a Git repository in absolute form; provided to work with Get-ChildItem.
+
     .INPUTS
-    None.
+    System.String
 
     .OUTPUTS
-    Logging to CLI.
+    GitUpdateStatus[]
+
+    .NOTES
+    The function will check if the command 'git' can be found on the system. If not, it will exit because having Git available is required.
 
     .EXAMPLE
     Update-GitRepository ../../Git/my-repo
+
+    Performs "git pull", "git submodule update --remote --merge" and "git fetch" (for each remote other than 'origin') for the directory '../../Git/my-repo', if it is a Git repository.
+
+    .EXAMPLE
+    Update-GitRepository -Name ../../Git/my-repo
+
+    Performs "git pull", "git submodule update --remote --merge" and "git fetch" (for each remote other than 'origin') for the directory '../../Git/my-repo', if it is a Git repository.
+
+    .EXAMPLE
+    Get-ChildItem -Directory ../../Git | Update-GitRepository
+
+    Performs updates to all subdirectories contained in '../../Git'.
 #>
 function Update-GitRepository {
     Param (
