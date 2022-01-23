@@ -12,7 +12,7 @@ You can also import the modules manually with `Import-Module <./FileName.psm1>` 
 
 The module exports the following functions:
 
+- `Test-GitPath`
 - `Update-GitRepository`
-- `Update-GitRepositories`
 
 All exported functions come with an associated help; `Get-Help <FunctionName>` is your friend for now.
