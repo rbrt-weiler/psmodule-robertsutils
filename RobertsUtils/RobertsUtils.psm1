@@ -19,10 +19,10 @@ class GitPathStatus {
 
 <#
     .SYNOPSIS
-    Tests is a given path is a Git repository and if it contains submodules.
+    Tests if a given path is a Git repository and if it contains submodules.
 
     .DESCRIPTION
-    For a given path, this function will check if it is a Git repository. If it is, it will also check if the Git repository contains submodules.
+    For a given path, this function will check if it is a Git repository. If it is, it will also check if the Git repository contains submodules. The array returned by this function will contain one GitPathStatus object per tested path.
 
     .PARAMETER Name
     The path that shall be tested.
